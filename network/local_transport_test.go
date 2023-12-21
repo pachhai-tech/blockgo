@@ -13,8 +13,15 @@ func TestConnect(t *testing.T) {
 	tra.Connect(trb)
 	trb.Connect(tra)
 
-	assert.Equal(t, tra.peers[trb.addr], trb)
-	assert.Equal(t, trb.peers[tra.addr], tra)
+	// Perform type assertion to access LocalTransport's fields
+	traLocal, ok1 := tra.(*LocalTransport)
+	assert.True(t, ok1, "tra is not of type *LocalTransport")
+
+	trbLocal, ok2 := trb.(*LocalTransport)
+	assert.True(t, ok2, "trb is not of type *LocalTransport")
+
+	assert.Equal(t, traLocal.peers[trb.Addr()], trb)
+	assert.Equal(t, trbLocal.peers[tra.Addr()], tra)
 }
 
 func TestSendMessage(t *testing.T) {
@@ -25,9 +32,9 @@ func TestSendMessage(t *testing.T) {
 	trb.Connect(tra)
 
 	msg := []byte("hello world")
-	tra.SendMessage(trb.addr, msg)
+	tra.SendMessage(trb.Addr(), msg)
 
 	rpc := <-trb.Consume()
-	assert.Equal(t, rpc.From, tra.addr)
+	assert.Equal(t, rpc.From, tra.Addr())
 	assert.Equal(t, rpc.Payload, msg)
 }
